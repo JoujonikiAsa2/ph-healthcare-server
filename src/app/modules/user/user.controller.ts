@@ -6,10 +6,15 @@ const createAdmin = async (req: Request, res: Response, next: NextFunction) => {
     const result = await UserServices.createAdmin(req.body);
     res.status(200).json({
       success: true,
+      message: "Admin created successfully",
       data: result,
     });
-  } catch (error) {
-    next(error);
+  } catch (error:any) {
+    res.status(500).json({
+      success: false,
+      message: error?.name || "Failed to create admin",
+      error,
+    });
   }
 };
 
