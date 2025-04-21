@@ -1,12 +1,13 @@
 import express, { Application } from 'express';
 import cors from 'cors';
-import { UserRoutes } from './app/modules/user/user.route';
-import { AdminRoutes } from './app/modules/admin/admin.route';
+import cookieParser from 'cookie-parser'
 import router from './app/routes';
 import { globalErrorHandler } from './app/middlewares/globalErrorHandler';
+import { notFoundErrorHandler } from './app/middlewares/notFoundErrorHandler';
 
 const app:Application = express();
 app.use(cors());
+app.use(cookieParser());
 
 app.use(express.json());
 
@@ -19,5 +20,6 @@ app.get('/', (req, res)=>{
 })
 
 app.use(globalErrorHandler)
+app.use(notFoundErrorHandler)
 
 export default app;

@@ -1,17 +1,4 @@
-type IOptions = {
-  page?: number;
-  limit?: number;
-  sortBy?: string;
-  sortOrder?: string;
-};
-
-type IOptionsResult = {
-  page: number;
-  limit: number;
-  skip: number;
-  sortBy: string;
-  sortOrder: string;
-};
+import { IOptions, IOptionsResult } from "../app/interfaces/pagination";
 
 const calculatePagination = (options: IOptions): IOptionsResult => {
   const page: number = Number(options.page) || 1;
