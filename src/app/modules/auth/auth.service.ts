@@ -2,8 +2,11 @@ import { UserStatus } from "../../../../generated/prisma";
 import { jwtHelpers } from "../../../helpers/jwtHelpers";
 import prisma from "../../../shared/prisma";
 import bcrypt from "bcrypt";
-import jwt, { JwtPayload, Secret } from "jsonwebtoken";
+import  { Secret } from "jsonwebtoken";
 import config from "../../config";
+import sendEmail from "./sendEmail";
+import ApiError from "../../errors/ApiError";
+import httpStatus from 'http-status'
 
 const loginUser = async (payload: { email: string; password: string }) => {
   const userData = await prisma.user.findUnique({
@@ -86,7 +89,7 @@ const refreshToken = async (token: string) => {
 };
 
 const changePassword = async (user: any, payload: any) => {
-  console.log(user)
+  console.log(user);
   const userData = await prisma.user.findUnique({
     where: {
       email: user.email,
@@ -122,4 +125,73 @@ const changePassword = async (user: any, payload: any) => {
   return { message: "Password changed successfully!" };
 };
 
-export const AuthServices = { loginUser, refreshToken, changePassword };
+const forgetPassword = async (payload: { email: string }) => {
+  const userData = await prisma.user.findUnique({
+    where: {
+      email: payload.email,
+    },
+  });
+
+  const resetPasswordToken = await jwtHelpers.generateToken(
+    {
+      email: userData?.email,
+      role: userData?.role,
+    },
+    config.jwt.reset_token_secret as Secret,
+    config.jwt.reset_token_expires_in as string
+  );
+
+  const resetPasswordLink = `${config.reset_password_url}?id=${userData?.id}&token=${resetPasswordToken}`;
+  console.log(resetPasswordLink);
+
+  await sendEmail(userData?.email as string, `
+    <div>
+    <p>Dear,</p>
+      <p>Your reset password Link
+      <a href="${resetPasswordLink}">
+      <button>Reset Password</button></a>
+      </p>
+    </div>
+    ` as string);
+
+  return { message: "Reset password link send to email" };
+};
+
+const resetPassword = async(token:string, payload: { id: string,
+  password: string;
+}) =>{
+  const userData = await prisma.user.findUnique({
+    where:{
+      id: payload.id,
+      status: UserStatus.ACTIVE,
+    },
+  })
+  if(userData === null){
+    throw new ApiError(httpStatus.FORBIDDEN, "Invalid User")
+  }
+
+  const isValidToken = await jwtHelpers.verifyToken(token, config.jwt.reset_token_secret as Secret)
+  if(!isValidToken){
+    throw new ApiError(httpStatus.FORBIDDEN, "Invalid token")
+  }
+
+  const hashedPassword: string = await bcrypt.hash(payload.password, 12);
+
+  await prisma.user.update({
+    where: {
+      id: payload.id,
+    },
+    data: {
+      password: hashedPassword,
+      needsPasswordChange: false,
+    },
+  })
+}
+
+export const AuthServices = {
+  loginUser,
+  refreshToken,
+  changePassword,
+  forgetPassword,
+  resetPassword
+};
