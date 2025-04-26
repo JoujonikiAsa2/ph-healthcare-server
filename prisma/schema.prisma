@@ -15,16 +15,18 @@ datasource db {
 }
 
 model User {
-  id                  String   @id @default(uuid())
-  email               String   @unique
+  id                  String     @id @default(uuid())
+  email               String     @unique
   password            String
   role                UserRole
-  needsPasswordChange Boolean  @default(true)
-  status              UserStatus  @default(ACTIVE)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  needsPasswordChange Boolean    @default(true)
+  status              UserStatus @default(ACTIVE)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
 
-  admin Admin?
+  admin   Admin?
+  doctor  Doctor?
+  patient Patient?
 
   @@map("users")
 }
@@ -35,13 +37,74 @@ model Admin {
   email         String   @unique
   profilePhoto  String?
   contactNumber String
-  isDeleted     Boolean @default(false)
+  isDeleted     Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   user User @relation(fields: [email], references: [email])
 
   @@map("admins")
+}
+
+model Doctor {
+  id                  String   @id @default(uuid())
+  name                String
+  email               String   @unique
+  profilePhoto        String?
+  contactNumber       String
+  address             String
+  registrationNumber  String
+  experience          Int      @default(0)
+  gender              Gender
+  appoinmentFee       Int
+  qualification       String
+  currentWorkingPlace String
+  designaton          String
+  isDeleted           Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [email], references: [email], onDelete: Cascade)
+
+  doctorSpecialties DoctorSpecialties[]
+
+  @@map("doctors")
+}
+
+model Patient {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  profilePhoto  String?
+  contactNumber String
+  address       String
+  isDeleted     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [email], references: [email], onDelete: Cascade)
+
+  @@map("patients")
+}
+
+model Specialties {
+  id                String              @id @default(uuid())
+  title             String
+  icon              String
+  doctorSpecialties DoctorSpecialties[]
+
+  @@map("specialties")
+}
+
+model DoctorSpecialties {
+  specialtiesId String
+  specialties   Specialties @relation(fields: [specialtiesId], references: [id])
+  doctorId      String
+
+  doctor Doctor @relation(fields: [doctorId], references: [id])
+
+  @@id([specialtiesId, doctorId])
+  @@map("doctor_specialties")
 }
 
 enum UserStatus {
@@ -57,4 +120,7 @@ enum UserRole {
   PATIENT
 }
 
-
+enum Gender {
+  MALE
+  FEMALE
+}
