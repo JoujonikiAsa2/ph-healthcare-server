@@ -4,12 +4,16 @@ import auth from "../../middlewares/auth";
 import { AppoinmentControllers } from "./appointment.controller";
 const router = express.Router();
 
-router.get("/", auth(UserRole.DOCTOR), AppoinmentControllers.getAllAppointments);
+router.get(
+  "/",
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  AppoinmentControllers.getAllAppointments
+);
 
 router.get(
-  "/:id",
-  auth(UserRole.DOCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  AppoinmentControllers.getAppointmentByID
+  "/my-appointment",
+  auth(UserRole.DOCTOR, UserRole.PATIENT),
+  AppoinmentControllers.getMyAppointment
 );
 
 router.post(
@@ -19,8 +23,8 @@ router.post(
 );
 
 router.delete(
-  "/",
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  "/my-appointment/:appointmentId",
+  auth(UserRole.PATIENT),
   AppoinmentControllers.deleteAppointment
 );
 

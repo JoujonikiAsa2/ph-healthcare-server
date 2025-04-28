@@ -9,7 +9,7 @@ router.get("/", auth(UserRole.DOCTOR), ScheduleControllers.getAllSchedules);
 router.get(
   "/:id",
   auth(UserRole.DOCTOR, UserRole.ADMIN, UserRole.SUPER_ADMIN),
-  ScheduleControllers.getAllSchedules
+  ScheduleControllers.getScheduleByID
 );
 
 router.post(
