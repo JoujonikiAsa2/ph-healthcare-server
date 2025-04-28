@@ -56,32 +56,34 @@ const doctorSchemaValidation = z.object({
 });
 
 const patientSchemaValidation = z.object({
-    password: z.string({
-      required_error: "Password is required",
+  password: z.string({
+    required_error: "Password is required",
+  }),
+  patient: z.object({
+    name: z.string({
+      required_error: "Name is required",
     }),
-    patient: z.object({
-      name: z.string({
-        required_error: "Name is required",
-      }),
-      email: z.string({
-        required_error: "Email is required",
-      }),
-      contactNumber: z.string({
-        required_error: "Contact nnumber is required",
-      }),
-      profilePhoto: z.string().optional(),
-      address: z.string().optional(),
-
+    email: z.string({
+      required_error: "Email is required",
     }),
-  });
+    contactNumber: z.string({
+      required_error: "Contact nnumber is required",
+    }),
+    profilePhoto: z.string().optional(),
+    address: z.string().optional(),
+  }),
+});
 
-  const statusSchemaValidation = z.object({
+const statusSchemaValidation = z.object({
+  body: z.object({
     status: z.enum([UserStatus.ACTIVE, UserStatus.BLOCKED, UserStatus.DELETED]),
-  });
-  
+  }),
+});
+
+
 export const UserValidation = {
   adminSchemaValidation,
   doctorSchemaValidation,
   patientSchemaValidation,
-  statusSchemaValidation
+  statusSchemaValidation,
 };

@@ -14,17 +14,32 @@ const getAllDoctors = async (
   options: IOptions
 ) => {
   const { page, limit, skip } = paginationHelper.calculatePagination(options);
-  const { searchTerm, ...filterData } = query;
+  const { searchTerm, specialties, ...filterData } = query;
   const doctorConditions: Prisma.DoctorWhereInput[] = [];
 
   if (searchTerm) {
-    doctorSearchableFields.forEach((field) => {
+    doctorSearchableFields.map((field) => {
       doctorConditions.push({
         [field]: {
           contains: searchTerm,
           mode: "insensitive",
         },
       });
+    });
+  }
+
+  if (specialties) {
+    doctorConditions.push({
+      doctorSpecialties: {
+        some: {
+          specialties: {
+            title: {
+              contains: specialties,
+              mode: 'insensitive'
+            },
+          },
+        },
+      },
     });
   }
 
@@ -51,6 +66,13 @@ const getAllDoctors = async (
       options.sortBy && options.sortOrder
         ? { [options.sortBy]: options.sortOrder }
         : { createdAt: "desc" },
+    include: {
+      doctorSpecialties: {
+        include: {
+          specialties: true,
+        },
+      },
+    },
   });
 
   const total = await prisma.doctor.count({
@@ -88,7 +110,6 @@ const uploadDoctorInfo = async (id: string, payload: IDoctorUpdate) => {
       data: doctorData,
     });
 
-
     if (specialties && specialties.length > 0) {
       const deletedSpecialities = specialties.filter(
         (speciality) => speciality.isDeleted
@@ -109,13 +130,14 @@ const uploadDoctorInfo = async (id: string, payload: IDoctorUpdate) => {
 
     console.log(createSpecialties);
     for (const speciality of createSpecialties) {
-      const createdSpecialties = await transactionClient.doctorSpecialties.create({
-        data: {
-          doctorId: doctorInfo.id,
-          specialtiesId: speciality.specialtiesId,
-        },
-      });
-      console.log("created specialties",createdSpecialties);
+      const createdSpecialties =
+        await transactionClient.doctorSpecialties.create({
+          data: {
+            doctorId: doctorInfo.id,
+            specialtiesId: speciality.specialtiesId,
+          },
+        });
+      console.log("created specialties", createdSpecialties);
     }
   });
   const result = await prisma.doctor.findUnique({

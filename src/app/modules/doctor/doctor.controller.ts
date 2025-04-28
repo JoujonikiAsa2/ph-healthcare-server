@@ -5,17 +5,18 @@ import { DoctorServices } from "./doctor.service";
 import pick from "../../../shared/pick";
 import { IDoctorFilterRequest } from "./doctor.interface";
 import { adminFilterableFields } from "../admin/admin.constant";
+import { doctorFilterableFields } from "./doctor.constant";
 
 const getAllDoctors = catchAsync(async (req, res) => {
-  const filters  = pick(req.query, adminFilterableFields )
+  const filters  = pick(req.query, doctorFilterableFields )
   const options =  pick(req.query, ["page", "limit", "sortBy", "sortOrder"])
   const result = await DoctorServices.getAllDoctors(filters as IDoctorFilterRequest, options);
-
   sendResponse(res, {
     success: true,
     statusCode: httpStatus.OK,
     message: "Specialties retrieved successfully",
-    data: result,
+    meta: result.meta,
+    data: result.data,
   });
 });
 
